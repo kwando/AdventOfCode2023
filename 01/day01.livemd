@@ -1,0 +1,84 @@
+# Day 01
+
+## Part 1
+
+```elixir
+defmodule Day1 do
+  @doc """
+  iex> Day1.get_calibration_code("1abc2")
+  12
+  """
+  def get_calibration_code(input) do
+    code_from_numbers(find_digits1(input))
+  end
+
+  def get_real_calibration_code(input) do
+    code_from_numbers(find_digits2(input))
+  end
+
+  defp code_from_numbers(numbers) do
+    10 * hd(numbers) + hd(Enum.reverse(numbers))
+  end
+
+  def find_digits1(<<>>), do: []
+
+  def find_digits1(<<c, rest::binary>>) when c >= ?0 and c <= ?9,
+    do: [c - ?0 | find_digits1(rest)]
+
+  def find_digits1(<<_, rest::binary>>), do: find_digits1(rest)
+
+  @doc """
+  iex> Day1.find_digits2("0fivex7")
+  [0, 5, 7]
+  """
+  def find_digits2(<<>>), do: []
+
+  def find_digits2(<<c, rest::binary>>) when c >= ?0 and c <= ?9,
+    do: [c - ?0 | find_digits2(rest)]
+
+  def find_digits2("one" <> rest), do: [1 | find_digits2(rest)]
+  def find_digits2("two" <> rest), do: [2 | find_digits2(rest)]
+  def find_digits2("three" <> rest), do: [3 | find_digits2(rest)]
+  def find_digits2("four" <> rest), do: [4 | find_digits2(rest)]
+  def find_digits2("five" <> rest), do: [5 | find_digits2(rest)]
+  def find_digits2("six" <> rest), do: [6 | find_digits2(rest)]
+  def find_digits2("seven" <> rest), do: [7 | find_digits2(rest)]
+  def find_digits2("eight" <> rest), do: [8 | find_digits2(rest)]
+  def find_digits2("nine" <> rest), do: [9 | find_digits2(rest)]
+
+  def find_digits2(<<_, rest::binary>>), do: find_digits2(rest)
+end
+```
+
+```elixir
+input = File.stream!("/Users/kwando/projects/AoC2023/01/input.txt")
+example1 = File.stream!("/Users/kwando/projects/AoC2023/01/example.txt")
+example2 = File.stream!("/Users/kwando/projects/AoC2023/01/example2.txt")
+:ok
+```
+
+```elixir
+example1
+|> Stream.map(&Day1.get_calibration_code/1)
+|> Enum.sum()
+```
+
+```elixir
+input
+|> Stream.map(&Day1.get_calibration_code/1)
+|> Enum.sum()
+```
+
+## Part 2
+
+```elixir
+example2
+|> Stream.map(&Day1.get_real_calibration_code/1)
+|> Enum.sum()
+```
+
+```elixir
+input
+|> Stream.map(&Day1.get_real_calibration_code/1)
+|> Enum.sum()
+```
