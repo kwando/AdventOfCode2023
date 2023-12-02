@@ -1,0 +1,114 @@
+# Day 02
+
+## Part 1
+
+```elixir
+example =
+  Path.join(__DIR__, "example.txt")
+  |> File.stream!()
+  |> Stream.map(&String.trim/1)
+  |> Stream.reject(&(&1 == ""))
+
+input =
+  Path.join(__DIR__, "input.txt")
+  |> File.stream!()
+  |> Stream.map(&String.trim/1)
+  |> Stream.reject(&(&1 == ""))
+```
+
+```elixir
+parse_line = fn line ->
+  [game, reveals] =
+    String.trim(line)
+    |> String.split(":", parts: 2)
+
+  [_, game_id] = String.split(game, " ")
+
+  reveals =
+    String.split(reveals, ";")
+    |> Enum.map(fn reveal ->
+      reveal
+      |> String.trim()
+      |> String.split(",", trim: true)
+      |> Enum.map(fn x ->
+        [count, color] = String.split(x)
+        {color, String.to_integer(count)}
+      end)
+      |> Map.new()
+      |> then(fn map ->
+        {
+          Map.get(map, "red", 0),
+          Map.get(map, "green", 0),
+          Map.get(map, "blue", 0)
+        }
+      end)
+    end)
+
+  {
+    String.to_integer(game_id),
+    reveals
+  }
+end
+
+possible_reveal? = fn {a, b, c}, {x, y, z} ->
+  x <= a && y <= b && z <= c
+end
+
+possible_game? = fn {_game, reveals} ->
+  Enum.all?(reveals, &possible_reveal?.({12, 13, 14}, &1))
+end
+```
+
+```elixir
+limit = {12, 13, 14}
+```
+
+<!-- livebook:{"reevaluate_automatically":true} -->
+
+```elixir
+example
+|> Enum.map(parse_line)
+|> Enum.filter(possible_game?)
+|> Enum.map(&elem(&1, 0))
+|> Enum.sum()
+```
+
+```elixir
+input
+|> Enum.map(parse_line)
+|> Enum.filter(possible_game?)
+|> Enum.map(&elem(&1, 0))
+|> Enum.sum()
+|> dbg()
+```
+
+## Part 2
+
+```elixir
+compute_cubes = fn reveals ->
+  for {r, g, b} <- reveals, reduce: {0, 0, 0} do
+    {ar, ag, ab} -> {max(ar, r), max(ag, g), max(ab, b)}
+  end
+end
+
+compute_power = fn reveals ->
+  {r, g, b} = compute_cubes.(reveals)
+  r * g * b
+end
+```
+
+```elixir
+example
+|> Enum.map(parse_line)
+|> Enum.map(&elem(&1, 1))
+|> Enum.map(compute_power)
+|> Enum.sum()
+```
+
+```elixir
+input
+|> Enum.map(parse_line)
+|> Enum.map(&elem(&1, 1))
+|> Enum.map(compute_power)
+|> Enum.sum()
+```
