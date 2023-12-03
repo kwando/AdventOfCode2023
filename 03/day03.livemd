@@ -1,0 +1,129 @@
+# Day 03
+
+## Part 1
+
+```elixir
+example = """
+467..114..
+...*......
+..35..633.
+......#...
+617*......
+.....+.58.
+..592.....
+......755.
+...$.*....
+.664.598..
+"""
+```
+
+```elixir
+puzzle_input = File.read!(Path.join(__DIR__, "input.txt")) |> String.trim()
+
+lines = String.split(puzzle_input, "\n")
+
+map =
+  for {line, y} <- Enum.with_index(lines),
+      {char, x} <- String.codepoints(line) |> Enum.with_index(),
+      into: %{} do
+    {{x, y}, char}
+  end
+```
+
+```elixir
+{width, height} = Map.keys(map) |> Enum.max()
+width = width + 1
+height = height + 1
+```
+
+```elixir
+ignore =
+  MapSet.new([
+    ?.,
+    ?0,
+    ?1,
+    ?2,
+    ?3,
+    ?4,
+    ?5,
+    ?6,
+    ?7,
+    ?8,
+    ?9
+  ])
+
+number? = fn char -> char >= ?0 and char <= ?9 end
+
+to_str = fn char -> to_string([char]) end
+```
+
+```elixir
+offsets = [
+  {-1, -1},
+  {0, -1},
+  {1, -1},
+  {-1, 0},
+  {1, 0},
+  {-1, 1},
+  {0, 1},
+  {1, 1}
+]
+
+add = fn {x1, y1}, {x2, y2} -> {x1 + x2, y1 + y2} end
+
+digit? = fn
+  x when x in ~w[0 1 2 3 4 5 6 7 8 9] -> true
+  _ -> false
+end
+
+adjacent = fn map, pos -> for offset <- offsets, do: map[add.(pos, offset)] end
+
+near_symbol? = fn map, pos ->
+  Enum.any?(adjacent.(map, pos), fn
+    nil -> false
+    "." -> false
+    x when x in ~w[0 1 2 3 4 5 6 7 8 9] -> false
+    _ -> true
+  end)
+end
+```
+
+```elixir
+near_symbol_map =
+  for i <- 0..(height - 1), j <- 0..(width - 1), into: %{} do
+    pos = {j, i}
+    {pos, near_symbol?.(map, pos)}
+  end
+
+Enum.filter(map, fn {_, value} -> digit?.(value) end)
+|> Enum.sort_by(fn {{x, y}, _} -> {y, x} end)
+|> Enum.chunk_while(
+  {-1, []},
+  fn
+    {{x, _}, _} = entry, {last_x, entries} ->
+      if x == last_x + 1 do
+        {:cont, {x, [entry | entries]}}
+      else
+        {:cont, entries, {x, [entry]}}
+      end
+  end,
+  fn {_, entries} -> {:cont, entries, []} end
+)
+|> Enum.map(fn entries ->
+  for {pos, digit} <- entries, reduce: {[], []} do
+    {digits, positions} ->
+      {[digit | digits], [pos | positions]}
+  end
+end)
+|> Enum.reject(fn v -> v == {[], []} end)
+|> Enum.map(fn {digits, positions} -> {Enum.join(digits) |> String.to_integer(), positions} end)
+|> Enum.map(fn {number, positions} ->
+  {number, Enum.any?(positions, &near_symbol_map[&1])}
+end)
+|> Enum.reduce(0, fn
+  {_, false}, acc -> acc
+  {num, true}, acc -> acc + num
+end)
+```
+
+## Part 2
