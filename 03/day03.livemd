@@ -95,28 +95,32 @@ near_symbol_map =
     {pos, near_symbol?.(map, pos)}
   end
 
-Enum.filter(map, fn {_, value} -> digit?.(value) end)
-|> Enum.sort_by(fn {{x, y}, _} -> {y, x} end)
-|> Enum.chunk_while(
-  {-1, []},
-  fn
-    {{x, _}, _} = entry, {last_x, entries} ->
-      if x == last_x + 1 do
-        {:cont, {x, [entry | entries]}}
-      else
-        {:cont, entries, {x, [entry]}}
-      end
-  end,
-  fn {_, entries} -> {:cont, entries, []} end
-)
-|> Enum.map(fn entries ->
-  for {pos, digit} <- entries, reduce: {[], []} do
-    {digits, positions} ->
-      {[digit | digits], [pos | positions]}
-  end
-end)
-|> Enum.reject(fn v -> v == {[], []} end)
-|> Enum.map(fn {digits, positions} -> {Enum.join(digits) |> String.to_integer(), positions} end)
+numbers_with_positions =
+  Enum.filter(map, fn {_, value} -> digit?.(value) end)
+  |> Enum.sort_by(fn {{x, y}, _} -> {y, x} end)
+  |> Enum.chunk_while(
+    {-1, []},
+    fn
+      {{x, _}, _} = entry, {last_x, entries} ->
+        if x == last_x + 1 do
+          {:cont, {x, [entry | entries]}}
+        else
+          {:cont, entries, {x, [entry]}}
+        end
+    end,
+    fn {_, entries} -> {:cont, entries, []} end
+  )
+  |> Enum.map(fn entries ->
+    for {pos, digit} <- entries, reduce: {[], []} do
+      {digits, positions} ->
+        {[digit | digits], [pos | positions]}
+    end
+  end)
+  |> Enum.reject(fn v -> v == {[], []} end)
+  |> Enum.map(fn {digits, positions} -> {Enum.join(digits) |> String.to_integer(), positions} end)
+  |> IO.inspect()
+
+numbers_with_positions
 |> Enum.map(fn {number, positions} ->
   {number, Enum.any?(positions, &near_symbol_map[&1])}
 end)
@@ -127,3 +131,44 @@ end)
 ```
 
 ## Part 2
+
+```elixir
+potential_gears =
+  map
+  |> Enum.reduce(
+    [],
+    fn
+      {pos, "*"}, acc -> [pos | acc]
+      _, acc -> acc
+    end
+  )
+```
+
+```elixir
+numbers_near_gears =
+  for gear_pos <- potential_gears do
+    adjecent_positions =
+      for offset <- offsets do
+        add.(gear_pos, offset)
+      end
+
+    connected_numbers =
+      Enum.filter(
+        numbers_with_positions,
+        fn {_, positions} ->
+          Enum.any?(
+            positions,
+            fn pos -> Enum.any?(adjecent_positions, &(&1 == pos)) end
+          )
+        end
+      )
+
+    Enum.map(connected_numbers, &elem(&1, 0))
+  end
+```
+
+```elixir
+for [a, b] <- numbers_near_gears, reduce: 0 do
+  sum -> sum + a * b
+end
+```
