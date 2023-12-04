@@ -1,0 +1,58 @@
+# Day 04
+
+## Part 1
+
+```elixir
+example =
+  Path.join(__DIR__, "example.txt")
+  |> File.stream!()
+
+input =
+  Path.join(__DIR__, "input.txt")
+  |> File.stream!()
+
+:ok
+```
+
+```elixir
+parse_card = fn line ->
+  [_, cards] = line |> String.trim() |> String.split(":")
+
+  cards
+  |> String.split("|")
+  |> Enum.map(fn str -> str |> String.split(" ", trim: true) |> MapSet.new() end)
+  |> List.to_tuple()
+end
+```
+
+```elixir
+score_card = fn {winning_numbers, card_numbers} ->
+  count =
+    MapSet.intersection(winning_numbers, card_numbers)
+    |> MapSet.size()
+
+  if count > 0 do
+    2 ** (count - 1)
+  else
+    0
+  end
+end
+```
+
+<!-- livebook:{"reevaluate_automatically":true} -->
+
+```elixir
+example
+|> Stream.map(parse_card)
+|> Stream.map(score_card)
+|> Enum.sum()
+```
+
+```elixir
+input
+|> Stream.map(parse_card)
+|> Stream.map(score_card)
+|> Enum.sum()
+```
+
+## Part 2
