@@ -1,0 +1,96 @@
+# Day 05
+
+## Part 1
+
+```elixir
+defmodule Day5 do
+  def parse(input) do
+    list =
+      input
+      |> String.split("\n")
+      |> Enum.chunk_by(&(&1 == ""))
+      |> Enum.reject(&(&1 == [""]))
+
+    ["seeds: " <> seeds] = hd(list)
+    seeds = to_numbers(seeds)
+
+    ranges =
+      list
+      |> Enum.drop(1)
+      |> Enum.map(fn mapping ->
+        Enum.drop(mapping, 1)
+        |> Enum.map(&parse_range/1)
+      end)
+
+    {seeds, ranges}
+  end
+
+  def mappings({_, mappings}), do: mappings
+
+  defp parse_range(str) do
+    [d, s, l] = to_numbers(str)
+
+    {s..(s + l), d - s}
+  end
+
+  defp to_numbers(str) do
+    String.split(str, " ")
+    |> Enum.map(&String.to_integer/1)
+  end
+
+  def map_number(num, mappings) do
+    for ranges <- mappings, reduce: num do
+      value ->
+        map_ranges(value, ranges)
+    end
+  end
+
+  @doc """
+  iex> Day5.map_ranges(79, [])
+  79
+
+  iex> Day5.map_ranges(79, [{98..100, -48}, {50..98, 2}])
+  81
+  """
+  def map_ranges(num, []), do: num
+
+  def map_ranges(num, [{range, offset} | rest]) do
+    if num in range do
+      num + offset
+    else
+      map_ranges(num, rest)
+    end
+  end
+
+  def part1({seeds, mappings}) do
+    for seed <- seeds do
+      map_number(seed, mappings)
+    end
+    |> Enum.min()
+  end
+end
+```
+
+<!-- livebook:{"reevaluate_automatically":true} -->
+
+```elixir
+input =
+  File.read!(Path.join(__DIR__, "input.txt"))
+  |> Day5.parse()
+
+example =
+  File.read!(Path.join(__DIR__, "example.txt"))
+  |> Day5.parse()
+```
+
+<!-- livebook:{"reevaluate_automatically":true} -->
+
+```elixir
+Day5.part1(example)
+```
+
+```elixir
+Day5.part1(input)
+```
+
+## Part 2
