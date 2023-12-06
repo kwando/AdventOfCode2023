@@ -1,0 +1,74 @@
+# Day 06
+
+## Part 1
+
+```elixir
+parse = fn input ->
+  [times, distances] =
+    String.split(input, "\n", trim: true)
+    |> Enum.map(fn line ->
+      String.split(line, " ", trim: true)
+      |> Enum.drop(1)
+      |> Enum.map(&String.to_integer/1)
+    end)
+
+  Enum.zip(times, distances)
+end
+```
+
+<!-- livebook:{"reevaluate_automatically":true} -->
+
+```elixir
+puzzle_input =
+  File.read!(Path.join(__DIR__, "input.txt"))
+  |> parse.()
+
+example =
+  File.read!(Path.join(__DIR__, "example.txt"))
+  |> parse.()
+```
+
+```elixir
+defmodule Day6 do
+  def part1(input) do
+    for race <- input, reduce: 1 do
+      prod -> prod * ways_to_win(race)
+    end
+  end
+
+  def ways_to_win({time, distance}) do
+    for speed <- 0..time, reduce: 0 do
+      acc ->
+        time_left = time - speed
+        distance_travelled = time_left * speed
+        {speed, distance_travelled, distance_travelled > distance}
+
+        if distance_travelled > distance do
+          acc + 1
+        else
+          acc
+        end
+    end
+  end
+end
+
+Day6.part1(example)
+```
+
+```elixir
+Day6.part1(puzzle_input)
+```
+
+## Part 2
+
+```elixir
+Day6.part1([
+  {71530, 940_200}
+])
+```
+
+```elixir
+Day6.part1([
+  {53_717_880, 275_118_112_151_524}
+])
+```
