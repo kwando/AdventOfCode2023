@@ -1,0 +1,86 @@
+# Day 07
+
+## Part 1
+
+```elixir
+parse_hand = fn hand ->
+  String.to_charlist(hand)
+  |> Enum.map(fn
+    char when char >= ?0 and char <= ?9 -> char - ?0
+    ?A -> 14
+    ?K -> 13
+    ?Q -> 12
+    ?J -> 11
+    ?T -> 10
+  end)
+end
+
+rank_hand = fn hand ->
+  freq =
+    Enum.frequencies(hand)
+    |> Enum.to_list()
+    |> Enum.sort_by(&elem(&1, 1), :desc)
+
+  uniq_count = Enum.count(freq)
+  {_, first_count} = hd(freq)
+
+  cond do
+    # fives
+    uniq_count == 1 -> 8
+    # fours
+    uniq_count == 2 and first_count == 4 -> 7
+    # full house
+    uniq_count == 2 and first_count == 3 -> 6
+    # full house
+    uniq_count == 2 and first_count == 3 -> 5
+    # threes
+    first_count == 3 -> 4
+    # two pairs
+    uniq_count == 3 -> 3
+    # one pair
+    uniq_count == 4 -> 2
+    # high_card
+    uniq_count == 5 -> 1
+  end
+end
+
+parse_line = fn str ->
+  [hand, bid] =
+    str
+    |> String.trim()
+    |> String.split(" ")
+
+  parsed_hand = parse_hand.(hand)
+  {{rank_hand.(parsed_hand), parsed_hand}, hand, String.to_integer(bid)}
+end
+```
+
+<!-- livebook:{"reevaluate_automatically":true} -->
+
+```elixir
+puzzle_input =
+  File.stream!(Path.join(__DIR__, "input.txt"))
+  |> Enum.map(parse_line)
+
+example =
+  File.stream!(Path.join(__DIR__, "example.txt"))
+  |> Enum.map(parse_line)
+```
+
+```elixir
+example
+|> Enum.sort()
+|> Enum.with_index(1)
+|> Enum.map(fn {{_, _, bid}, rank} -> rank * bid end)
+|> Enum.sum()
+```
+
+```elixir
+puzzle_input
+|> Enum.sort()
+|> Enum.with_index(1)
+|> Enum.map(fn {{_, _, bid}, rank} -> rank * bid end)
+|> Enum.sum()
+```
+
+## Part 2
