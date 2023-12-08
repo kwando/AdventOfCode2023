@@ -1,0 +1,84 @@
+# Day 08
+
+## Part 1
+
+```elixir
+puzzle_input = File.read!(Path.join(__DIR__, "input.txt"))
+example = File.read!(Path.join(__DIR__, "example.txt"))
+example2 = File.read!(Path.join(__DIR__, "example2.txt"))
+```
+
+```elixir
+defmodule Day08 do
+  def parse(input) do
+    [instructions, network] =
+      input
+      |> String.split("\n\n")
+
+    instructions =
+      String.codepoints(instructions)
+      |> Enum.map(fn
+        "L" -> :left
+        "R" -> :right
+      end)
+
+    network =
+      network
+      |> String.split("\n", trim: true)
+      |> Enum.map(fn line ->
+        [id, left_right] =
+          line
+          |> String.split(" = ")
+
+        [left, right] =
+          left_right
+          |> String.split(", ")
+
+        {id,
+         %{
+           left: String.replace_leading(left, "(", ""),
+           right: String.replace_trailing(right, ")", "")
+         }}
+      end)
+      |> Map.new()
+
+    {
+      instructions,
+      network
+    }
+  end
+
+  def part1({instructions, map}) do
+    Enum.reduce_while(Stream.cycle(instructions), {"AAA", 0}, fn
+      _instr, {"ZZZ", n} ->
+        {:halt, n}
+
+      instr, {pos, steps} ->
+        {:cont, {map[pos][instr], steps + 1}}
+    end)
+  end
+end
+```
+
+<!-- livebook:{"reevaluate_automatically":true} -->
+
+```elixir
+Day08.parse(example)
+|> Day08.part1()
+```
+
+```elixir
+Day08.parse(example2)
+|> Day08.part1()
+```
+
+```elixir
+Day08.parse(puzzle_input)
+|> Day08.part1()
+```
+
+```elixir
+
+```
+
+## Part 2
