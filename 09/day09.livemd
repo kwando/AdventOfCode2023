@@ -1,0 +1,91 @@
+# Day 09
+
+## Part 1
+
+```elixir
+example = File.stream!(Path.join(__DIR__, "example.txt"))
+puzzle_input = File.stream!(Path.join(__DIR__, "input.txt"))
+```
+
+```elixir
+defmodule Day09 do
+  def part1(input) do
+    for readings <- parse(input) do
+      compute_next_value(readings)
+    end
+    |> Enum.sum()
+  end
+
+  def part2(input) do
+    for readings <- parse(input) do
+      compute_prev_value(readings)
+    end
+    |> Enum.sum()
+  end
+
+  def compute_prev_value(readings) do
+    compute_all_diffs(readings, [readings])
+    |> Enum.map(&hd/1)
+    |> Enum.reduce(0, fn first, prev_next ->
+      first - prev_next
+    end)
+  end
+
+  def compute_next_value(readings) do
+    compute_all_diffs(readings, [readings])
+    |> Enum.map(&List.last/1)
+    |> Enum.reduce(0, fn last, prev_next ->
+      last + prev_next
+    end)
+  end
+
+  defp compute_all_diffs(readings, result) do
+    if Enum.all?(readings, &(&1 == 0)) do
+      result
+    else
+      diff = compute_diffs(readings)
+      compute_all_diffs(diff, [diff | result])
+    end
+  end
+
+  def compute_diffs([_]), do: []
+
+  def compute_diffs([a, b | rest]) do
+    [b - a | compute_diffs([b | rest])]
+  end
+
+  defp parse(input) do
+    input
+    |> Enum.map(fn line ->
+      line
+      |> String.trim()
+      |> String.split(" ")
+      |> Enum.map(&String.to_integer/1)
+    end)
+  end
+end
+```
+
+<!-- livebook:{"reevaluate_automatically":true} -->
+
+```elixir
+Day09.part1(example)
+```
+
+<!-- livebook:{"reevaluate_automatically":true} -->
+
+```elixir
+Day09.part1(puzzle_input)
+```
+
+## Part 2
+
+<!-- livebook:{"reevaluate_automatically":true} -->
+
+```elixir
+Day09.part2(example)
+```
+
+```elixir
+Day09.part2(puzzle_input)
+```
