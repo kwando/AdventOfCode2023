@@ -1,0 +1,109 @@
+# Day 11
+
+## Part 1
+
+```elixir
+puzzle_input = File.read!(Path.join(__DIR__, "input.txt"))
+example = File.read!(Path.join(__DIR__, "example.txt"))
+```
+
+```elixir
+defmodule Day11 do
+  def part1(input) do
+    map = parse(input)
+
+    max = map |> Enum.max()
+
+    x_pos = Enum.frequencies_by(map, &elem(&1, 0))
+    y_pos = Enum.frequencies_by(map, &elem(&1, 1))
+
+    empty_cols =
+      for x <- 0..elem(max, 0), reduce: [] do
+        empty_cols ->
+          empty_cols |> add_unless_exists(x_pos, x)
+      end
+
+    empty_rows =
+      for y <- 0..elem(max, 0), reduce: [] do
+        empty_rows ->
+          empty_rows |> add_unless_exists(y_pos, y)
+      end
+
+    {max, empty_cols, empty_rows}
+    scale = 10
+    scale = 1_000_000 - 1
+
+    remapped =
+      for {x, y} <- map do
+        dx = Enum.count(empty_cols, &(x > &1)) * scale
+        dy = Enum.count(empty_rows, &(y > &1)) * scale
+
+        {x + dx, y + dy}
+      end
+
+    sum_distances(remapped)
+  end
+
+  def sum_distances([]) do
+    0
+  end
+
+  def sum_distances([pos | rest]) do
+    for g <- rest, reduce: sum_distances(rest) do
+      sum ->
+        manhattan_distance(pos, g) + sum
+    end
+  end
+
+  defp add_unless_exists(result, existing, value) do
+    if existing[value] do
+      result
+    else
+      [value | result]
+    end
+  end
+
+  defp manhattan_distance({x1, y1}, {x2, y2}) do
+    abs(x1 - x2) + abs(y1 - y2)
+  end
+
+  defp parse(input) do
+    tokens =
+      input
+      |> String.to_charlist()
+
+    state = %{pos: %{x: 0, y: 0}, map: []}
+
+    for token <- tokens, reduce: state do
+      state ->
+        case token do
+          ?. ->
+            update_in(state, [:pos, :x], &(&1 + 1))
+
+          ?# ->
+            state
+            |> update_in([:map], &[{state.pos.x, state.pos.y} | &1])
+            |> update_in([:pos, :x], &(&1 + 1))
+
+          ?\n ->
+            state
+            |> update_in([:pos, :y], &(&1 + 1))
+            |> put_in([:pos, :x], 0)
+        end
+    end
+    |> Map.get(:map)
+  end
+end
+```
+
+<!-- livebook:{"reevaluate_automatically":true} -->
+
+```elixir
+Day11.part1(example)
+```
+
+```elixir
+Day11.part1(puzzle_input)
+```
+
+## Part 2
